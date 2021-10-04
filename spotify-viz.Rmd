@@ -1,0 +1,71 @@
+---
+title: "spotify-viz"
+author: "Archi Parekh"
+date: "9/25/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("knitr")
+library("formatR")
+library(tidyverse)
+library(spotifyr)
+library(jsonlite)
+library(lubridate)
+```
+
+## Goal
+
+I want to find the mood of all of my playlists and how they have changed over time.
+
+1) Get all user playlists
+2) Get all tracks for each playlist
+3) Somehow aggregate the mood of the song
+4) Somehow quantify each playlist's mood
+5) Find the time range of its creation. 
+6) Plot it all. 
+```{r}
+creds <- read_json("creds.json") # read creds
+
+Sys.setenv(SPOTIFY_CLIENT_ID = creds$id) # set creds
+Sys.setenv(SPOTIFY_CLIENT_SECRET = creds$secret)
+
+access_token <- get_spotify_access_token() # retrieve access token
+username = 'someone1623'
+```
+
+```{r}
+my.tracks <- get_my_top_artists_or_tracks(type = 'tracks', time_range = 'long_term', limit = 20)
+View(my.tracks)
+```
+
+```{r}
+track.audio.features <- get_track_audio_features(my.tracks$id)
+View(track.audio.features)
+```
+
+```{r}
+df <- as.data.frame(cbind(my.tracks$name, track.audio.features$energy))
+colnames(df) <- c("Name", "Energy")
+```
+
+```{r}
+p<-ggplot(data=df, aes(x=Name, y=Energy)) +
+  geom_bar(stat="identity", fill="steelblue") + 
+  coord_flip() +
+  theme_minimal() +
+  ggtitle("Energy of my top 20 songs of all time")
+p
+```
+
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
